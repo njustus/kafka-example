@@ -8,15 +8,25 @@ object dtos {
 
   type Lines = IndexedSeq[LineEdit]
 
-  sealed trait Message
-  case class LineEdit(fileName: String,
+  trait KeyeableMessage {
+    type A
+    def key: A
+  }
+
+  sealed trait Message extends KeyeableMessage {
+    type A = String
+    def fileName: String
+    def key: A = fileName
+  }
+
+  case class LineEdit(override val fileName: String,
                       content: String,
                       user: Editor,
                       lineIdx: Int,
                       timestamp: Instant
                      ) extends Message
 
-  case class FileContent(fileName: String,
+  case class FileContent(override val fileName: String,
                          content: Lines,
                          user: Editor,
                          timestamp: Instant)
