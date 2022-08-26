@@ -7,13 +7,12 @@ import fs2._
 object SnapshotsApp extends IOApp {
   import de.detim.njustus.kafkaexample.KafkaCirceSerializers._
 
-
   def applyPatch(state: dtos.FileContent, edit: dtos.LineEdit): dtos.FileContent = {
-    if(edit.start.y >= state.content.size) {
-      state.copy(content = state.content.appended(edit.content))
+    if(edit.lineIdx >= state.content.size) {
+      state.copy(content = state.content.appended(edit))
     } else {
-      val (start, rest) = state.content.splitAt(edit.start.y)
-      val newContent = start.appendedAll(rest.tail.prepended(edit.content))
+      val (start, rest) = state.content.splitAt(edit.lineIdx)
+      val newContent = start.appendedAll(rest.tail.prepended(edit))
       state.copy(content = newContent)
     }
   }

@@ -5,7 +5,12 @@ package de.detim.njustus.kafkaexample
 
 import cats.effect._
 import com.banno.kafka.BootstrapServers
+import de.detim.njustus.kafkaexample.dtos.Editor
 import fs2._
+
+import java.nio.file.{Files, Path, Paths}
+import java.time.Instant
+import scala.jdk.CollectionConverters._
 object App extends IOApp {
   import KafkaCirceSerializers._
 
@@ -13,11 +18,27 @@ object App extends IOApp {
   val topic = "files"
   val snapshotTopic = "file-snapshots"
 
-  val messages:Stream[IO, dtos.Message] = Stream(
-    dtos.FileContent("test.txt", Seq("dies ist ein test", "test", "blup", "test").toIndexedSeq),
-    dtos.LineEdit("test.txt", "nico-test-juni", dtos.Point(1, 0)),
-    dtos.LineEdit("test.txt", "paul-test-mipa", dtos.Point(2, 2)),
-  )
+  def messages(path: Path):Stream[IO, dtos.Message] =
+    Stream.eval(fileContent(path)) ++
+    Stream(
+      dtos.LineEdit("test.txt", "nico-test-juni", dtos.Editor("nico"), 1, Instant.now()),
+      dtos.LineEdit("test.txt", "paul-test-mipa", dtos.Editor("sarah"), 2, Instant.now()),
+      dtos.LineEdit("test.txt", "paul-test-mipa", dtos.Editor("tim"), 4, Instant.now()),
+    )
+
+  private def fileContent(path: Path) = IO.delay {
+    val fileName = path.getFileName.toString
+    val editor = dtos.Editor(Files.getOwner(path).getName)
+    val timestamp = Files.getLastModifiedTime(path).toInstant
+    val lines = Files.readAllLines(path).asScala.zipWithIndex.map { case (line, idx) =>
+      dtos.LineEdit(fileName, line, editor, idx, timestamp)
+    }
+
+    dtos.FileContent(fileName,
+      lines.toIndexedSeq,
+      editor,
+      Instant.now())
+  }
 
   override def run(args: List[String]): IO[ExitCode] = for {
     _ <- IO.println("starting producer...")
@@ -32,14 +53,7 @@ object App extends IOApp {
 
   def stream = {
     KafkaProducer.createProducer[dtos.Message](servers, topic).flatMap { producer =>
-      messages.evalMap(producer.sendAsync)
-
-//      val consumerClass = new KafkaConsumer(BootstrapServers("localhost:29092"))
-//      consumerClass.createConsumer("test-client", "file-updates")
-//        .evalMap(x => IO.print(s"consumer received: $x"))
-//      _ <- messages.evalMap(producer.sendAsync).drain
-//      _ <-
-//        .drain
+      messages(Paths.get("test-file.txt")).evalMap(producer.sendAsync)
     }
   }
 }
