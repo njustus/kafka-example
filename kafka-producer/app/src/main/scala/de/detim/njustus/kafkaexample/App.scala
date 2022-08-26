@@ -10,7 +10,8 @@ object App extends IOApp {
   import KafkaCirceSerializers._
 
   val servers = BootstrapServers("localhost:29092")
-  val topic = "file-updates"
+  val topic = "files"
+  val snapshotTopic = "file-snapshots"
 
   val messages:Stream[IO, dtos.Message] = Stream(
     dtos.FileContent("test.txt", Seq("dies ist ein test", "test", "blup", "test").toIndexedSeq),
@@ -20,7 +21,7 @@ object App extends IOApp {
 
   override def run(args: List[String]): IO[ExitCode] = for {
     _ <- IO.println("starting producer...")
-//    _ <- stream.compile.drain
+    _ <- stream.compile.drain
     _ <- stream2.compile.drain
   } yield ExitCode.Success
 
