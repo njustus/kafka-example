@@ -3,10 +3,8 @@
  */
 package de.detim.njustus.kafkaexample
 
-object App {
-  def main(args: Array[String]): Unit = {
-    println(greeting())
-  }
+import cats.effect._
 
-  def greeting(): String = "Hello, world!"
+object App extends IOApp {
+  override def run(args: List[String]): IO[ExitCode] = IO.println("hello world") >> IO(ExitCode.Success)
 }

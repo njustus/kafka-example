@@ -18,33 +18,26 @@ plugins {
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+
+    maven {
+      url "https://packages.confluent.io/maven/"
+    }
 }
 
 dependencies {
     // Use Scala 2.13 in our library project
-    implementation 'org.scala-lang:scala-library:2.13.6'
+    implementation 'org.scala-lang:scala-library:2.13.8'
+                def scalaVersion = "2.13"
 
-    // This dependency is used by the application.
-    implementation 'com.google.guava:guava:30.1.1-jre'
-}
-
-testing {
-    suites {
-        // Configure the built-in test suite
-        test {
-            // Use JUnit4 test framework
-            useJUnit('4.13.2')
-
-            dependencies {
-                // Use Scalatest for testing our library
-                implementation 'org.scalatest:scalatest_2.13:3.2.10'
-                implementation 'org.scalatestplus:junit-4-13_2.13:3.2.2.0'
+                implementation "com.banno:kafka4s_${scalaVersion}:4.0.0"
+                implementation "com.github.pureconfig:pureconfig_${scalaVersion}:0.17.1"
+                implementation "io.circe:circe-core_${scalaVersion}:0.14.1"
+                implementation "io.circe:circe-generic_${scalaVersion}:0.14.1"
+                implementation "io.circe:circe-parser_${scalaVersion}:0.14.1"
 
                 // Need scala-xml at test runtime
-                runtimeOnly 'org.scala-lang.modules:scala-xml_2.13:1.2.0'
-            }
-        }
-    }
+                runtimeOnly "org.scala-lang.modules:scala-xml_${scalaVersion}:1.2.0"
+
 }
 
 application {
