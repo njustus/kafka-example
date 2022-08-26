@@ -4,7 +4,8 @@ import cats.effect.IO
 import com.banno.kafka._
 import com.banno.kafka.producer.ProducerApi
 import fs2._
-import org.apache.kafka.clients.producer.ProducerRecord
+import org.apache.kafka.clients.producer.{ProducerRecord, RecordMetadata}
+import KafkaCirceSerializers._
 import org.apache.kafka.common.serialization.Serializer
 
 case class Person(
@@ -12,15 +13,18 @@ case class Person(
                  age: Int
                  )
 
-class KafkaProducer(servers: BootstrapServers, topicName: String) {
-
-  def produce(producerApi: ProducerApi[IO, String, String])(i:Int) = {
-    println(s"sending $i,$i to $topicName")
-    producerApi.sendAsync(new ProducerRecord(topicName, "key: "+i.toString, "value: "+i.toString))
+class KafkaProducer[A:Serializer](topicName: String, producer: ProducerApi[IO, String, A]) {
+  def sendAsync(msg:A): IO[RecordMetadata] = {
+    IO.println(s"sending $msg downstream to topic $topicName") >>
+    producer.sendAsync(new ProducerRecord(topicName, msg.hashCode().toString, msg))
   }
+}
 
-  def createProducer: Stream[IO, ProducerApi[IO, String, String]] =
-    Stream.resource(ProducerApi.resource[IO, String, String](servers)).flatMap(p =>
-      Stream.eval(IO.println(s"producer created")).map(_ => p)
+object KafkaProducer {
+
+  def createProducer[A: Serializer](servers: BootstrapServers, topicName: String): Stream[IO, KafkaProducer[A]] =
+    Stream.resource(ProducerApi.resource[IO, String, A](servers)).flatMap(p =>
+      Stream.eval(IO.println(s"producer created"))
+        .map(_ => new KafkaProducer[A](topicName, p))
     )
 }

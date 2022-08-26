@@ -6,13 +6,14 @@ import com.banno.kafka.consumer.ConsumerApi
 import fs2._
 import org.apache.kafka.clients.producer.ProducerRecord
 import org.apache.kafka.common.TopicPartition
-
-class KafkaConsumer(servers: BootstrapServers) {
+import KafkaCirceSerializers._
+import org.apache.kafka.common.serialization.{Deserializer}
+object KafkaConsumer {
 
   import scala.concurrent.duration._
 
-  def createConsumer(clientId: String, topicName: String) =
-    Stream.resource(ConsumerApi.resource[IO, String, String](
+  def createConsumer[A:Deserializer](servers: BootstrapServers, clientId: String, topicName: String): Stream[IO, A] =
+    Stream.resource(ConsumerApi.resource[IO, String, A](
       servers,
       ClientId(clientId)
     )).flatMap { c =>

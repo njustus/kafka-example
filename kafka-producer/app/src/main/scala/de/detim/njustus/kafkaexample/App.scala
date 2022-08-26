@@ -5,16 +5,40 @@ package de.detim.njustus.kafkaexample
 
 import cats.effect._
 import com.banno.kafka.BootstrapServers
-
+import fs2._
 object App extends IOApp {
+  import KafkaCirceSerializers._
+
+  val servers = BootstrapServers("localhost:29092")
+  val topic = "file-updates"
+
+  val messages:Stream[IO, dtos.Message] = Stream(
+    dtos.FileContent("test.txt", Seq("dies ist ein test", "test", "blup", "test").toIndexedSeq),
+    dtos.LineEdit("test.txt", "nico-test-juni", dtos.Point(1, 0)),
+    dtos.LineEdit("test.txt", "paul-test-mipa", dtos.Point(2, 2)),
+  )
+
   override def run(args: List[String]): IO[ExitCode] = for {
     _ <- IO.println("starting producer...")
-    producerClass = new KafkaProducer(BootstrapServers("localhost:29092"), "file-updates")
-    consumerClass = new KafkaConsumer(BootstrapServers("localhost:29092"))
-    _ <- producerClass.createProducer.evalMap(producerClass.produce(_)(5)).compile.drain
-    _ <- consumerClass.createConsumer("test-client", "file-updates")
-      .evalMap(x => IO.print(s"consumer received: $x"))
-      .take(1)
-      .compile.drain
+//    _ <- stream.compile.drain
+    _ <- stream2.compile.drain
   } yield ExitCode.Success
+
+  def stream2 = {
+    KafkaConsumer.createConsumer[dtos.Message](servers, "scala-test-client", topic)
+      .evalMap(x => IO.println(s"received msg $x"))
+  }
+
+  def stream = {
+    KafkaProducer.createProducer[dtos.Message](servers, topic).flatMap { producer =>
+      messages.evalMap(producer.sendAsync)
+
+//      val consumerClass = new KafkaConsumer(BootstrapServers("localhost:29092"))
+//      consumerClass.createConsumer("test-client", "file-updates")
+//        .evalMap(x => IO.print(s"consumer received: $x"))
+//      _ <- messages.evalMap(producer.sendAsync).drain
+//      _ <-
+//        .drain
+    }
+  }
 }
