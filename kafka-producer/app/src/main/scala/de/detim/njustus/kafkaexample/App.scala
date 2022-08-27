@@ -21,9 +21,9 @@ object App extends IOApp {
   def messages(path: Path):Stream[IO, dtos.Message] =
     Stream.eval(fileContent(path)) ++
     Stream(
-      dtos.LineEdit("test.txt", "nico-test-juni", dtos.Editor("nico"), 1, Instant.now()),
-      dtos.LineEdit("test.txt", "paul-test-mipa", dtos.Editor("sarah"), 2, Instant.now()),
-      dtos.LineEdit("test.txt", "paul-test-mipa", dtos.Editor("tim"), 4, Instant.now()),
+      dtos.LineEdit(path.getFileName.toString, "nico-test-juni", dtos.Editor("nico"), 1, Instant.now()),
+      dtos.LineEdit(path.getFileName.toString, "paul-test-mipa", dtos.Editor("sarah"), 2, Instant.now()),
+      dtos.LineEdit(path.getFileName.toString, "paul-test-mipa", dtos.Editor("tim"), 4, Instant.now()),
     )
 
   private def fileContent(path: Path) = IO.delay {
@@ -43,7 +43,7 @@ object App extends IOApp {
   override def run(args: List[String]): IO[ExitCode] = for {
     _ <- IO.println("starting producer...")
     _ <- stream.compile.drain
-    _ <- stream2.compile.drain
+//    _ <- stream2.compile.drain
   } yield ExitCode.Success
 
   def stream2 = {
