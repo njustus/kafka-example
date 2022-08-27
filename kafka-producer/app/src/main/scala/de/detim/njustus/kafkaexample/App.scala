@@ -24,6 +24,7 @@ object App extends IOApp {
       dtos.LineEdit(path.getFileName.toString, "nico-test-juni", dtos.Editor("nico"), 1, Instant.now()),
       dtos.LineEdit(path.getFileName.toString, "paul-test-mipa", dtos.Editor("sarah"), 2, Instant.now()),
       dtos.LineEdit(path.getFileName.toString, "paul-test-mipa", dtos.Editor("tim"), 4, Instant.now()),
+      dtos.LineEdit(path.getFileName.toString, "test1234", dtos.Editor("tim"), 3, Instant.now()),
     )
 
   private def fileContent(path: Path) = IO.delay {
