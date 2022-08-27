@@ -21,6 +21,7 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
   kafka-ui:
     image: provectuslabs/kafka-ui
     container_name: kafka-ui
@@ -31,3 +32,12 @@ services:
       - KAFKA_CLUSTERS_0_NAME=local
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
       - KAFKA_CLUSTERS_0_ZOOKEEPER=localhost:2181
+
+  kafka-ws-proxy:
+    image: kpmeen/kafka-websocket-proxy:latest      
+    ports:
+      - 8078:8078
+    environment:
+      - WSPROXY_SERVER_ID=kafka-ws-proxy-1
+      - WSPROXY_BIND_INTERFACE=0.0.0.0
+      - WSPROXY_KAFKA_BOOTSTRAP_HOSTS=kafka:9092
