@@ -1,85 +1,55 @@
-<script setup lang="ts">
+<script lang="ts">
+import { defineComponent } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
+import {SocketConnector} from './socket-connector'
+
+
+interface SimpleEditRow {
+  username: string,
+  row: string
+}
+
+export default defineComponent({
+  created() {
+    const connector = new SocketConnector<any>('ws://localhost:4200', (msg) => {
+      console.log("received msg:", msg)      
+      this.$data.messages.push(msg.value)
+      const payload = msg.value?.value?.LineEdit
+      if(payload) {
+        this.$data.beautified.push({
+          username: payload.user.username,
+          row: payload.content
+        })
+      }
+    })
+    console.log("connector created")
+  },
+
+  data(): {messages: any[], beautified: SimpleEditRow[]} {
+    return {
+      messages: [],
+      beautified: []
+    }
+  },
+});
+
 </script>
 
 <template>
   <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
-    </div>
   </header>
 
-  <RouterView />
+  <section>
+    <p v-for="(it, idx) in beautified" v-bind:key="idx">
+      <strong>[{{idx}} {{it.username}}]</strong> {{it.row}}
+    </p>
+  </section>
+
+<!--  <RouterView /> -->
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
-
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
-
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
-
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
-
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
-
-nav a:first-of-type {
-  border: 0;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
-
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
+strong {
+  font-weight: bold;
 }
 </style>
